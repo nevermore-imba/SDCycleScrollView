@@ -7,7 +7,6 @@
 //
 
 #import "CustomCollectionViewCell.h"
-#import "UIView+SDExtension.h"
 
 @implementation CustomCollectionViewCell
 

@@ -33,20 +33,23 @@
  * 更新日期：2016.04.21
  */
 
+#import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-typedef enum {
+typedef NS_ENUM(NSInteger, SDCycleScrollViewPageContolAliment) {
     SDCycleScrollViewPageContolAlimentRight,
     SDCycleScrollViewPageContolAlimentCenter
-} SDCycleScrollViewPageContolAliment;
+};
 
-typedef enum {
+typedef NS_ENUM(NSInteger, SDCycleScrollViewPageContolStyle) {
     SDCycleScrollViewPageContolStyleClassic,        // 系统自带经典样式
     SDCycleScrollViewPageContolStyleAnimated,       // 动画效果pagecontrol
     SDCycleScrollViewPageContolStyleNone            // 不显示pagecontrol
-} SDCycleScrollViewPageContolStyle;
+};
 
 @class SDCycleScrollView;
+
+NS_ASSUME_NONNULL_BEGIN
 
 @protocol SDCycleScrollViewDelegate <NSObject>
 
@@ -58,8 +61,9 @@ typedef enum {
 /** 图片滚动回调 */
 - (void)cycleScrollView:(SDCycleScrollView *)cycleScrollView didScrollToIndex:(NSInteger)index;
 
+- (void)cycleScrollView:(SDCycleScrollView *)cycleScrollView willDisplayImageView:(UIImageView *)imageView forIndex:(NSInteger)index;
 
-
+- (void)cycleScrollView:(SDCycleScrollView *)cycleScrollView didEndDisplayingImageView:(UIImageView *)imageView forIndex:(NSInteger)index;
 
 
 
@@ -74,7 +78,9 @@ typedef enum {
 - (UINib *)customCollectionViewCellNibForCycleScrollView:(SDCycleScrollView *)view;
 
 /** 如果你自定义了cell样式，请在实现此代理方法为你的cell填充数据以及其它一系列设置 */
-- (void)setupCustomCell:(UICollectionViewCell *)cell forIndex:(NSInteger)index cycleScrollView:(SDCycleScrollView *)view;
+- (void)cycleScrollView:(SDCycleScrollView *)cycleScrollView willDisplayCell:(__kindof UICollectionViewCell *)cell forIndex:(NSInteger)index;
+
+- (void)cycleScrollView:(SDCycleScrollView *)cycleScrollView didEndDisplayingCell:(__kindof UICollectionViewCell *)cell forIndex:(NSInteger)index;
 
 @end
 
@@ -82,31 +88,28 @@ typedef enum {
 
 
 /** 初始轮播图（推荐使用） */
-+ (instancetype)cycleScrollViewWithFrame:(CGRect)frame delegate:(id<SDCycleScrollViewDelegate>)delegate placeholderImage:(UIImage *)placeholderImage;
++ (instancetype)cycleScrollViewWithFrame:(CGRect)frame delegate:(nullable id<SDCycleScrollViewDelegate>)delegate placeholderImage:(nullable UIImage *)placeholderImage;
 
 + (instancetype)cycleScrollViewWithFrame:(CGRect)frame imageURLStringsGroup:(NSArray *)imageURLStringsGroup;
 
 
 /** 本地图片轮播初始化方式 */
-+ (instancetype)cycleScrollViewWithFrame:(CGRect)frame imageNamesGroup:(NSArray *)imageNamesGroup;
++ (instancetype)cycleScrollViewWithFrame:(CGRect)frame imageNamesGroup:(NSArray<NSString *> *)imageNamesGroup;
 
 /** 本地图片轮播初始化方式2,infiniteLoop:是否无限循环 */
-+ (instancetype)cycleScrollViewWithFrame:(CGRect)frame shouldInfiniteLoop:(BOOL)infiniteLoop imageNamesGroup:(NSArray *)imageNamesGroup;
++ (instancetype)cycleScrollViewWithFrame:(CGRect)frame shouldInfiniteLoop:(BOOL)infiniteLoop imageNamesGroup:(NSArray<NSString *> *)imageNamesGroup;
 
 
 //////////////////////  数据源API //////////////////////
 
 /** 网络图片 url string 数组 */
-@property (nonatomic, strong) NSArray *imageURLStringsGroup;
+@property (nullable, nonatomic, strong) NSArray *imageURLStringsGroup;
 
 /** 每张图片对应要显示的文字数组 */
-@property (nonatomic, strong) NSArray *titlesGroup;
+@property (nullable, nonatomic, strong) NSArray<NSString *> *titlesGroup;
 
 /** 本地图片数组 */
-@property (nonatomic, strong) NSArray *localizationImageNamesGroup;
-
-
-
+@property (nullable, nonatomic, strong) NSArray<NSString *> *localizationImageNamesGroup;
 
 
 //////////////////////  滚动控制API //////////////////////
@@ -123,19 +126,19 @@ typedef enum {
 /** 图片滚动方向，默认为水平滚动 */
 @property (nonatomic, assign) UICollectionViewScrollDirection scrollDirection;
 
-@property (nonatomic, weak) id<SDCycleScrollViewDelegate> delegate;
+@property (nullable, nonatomic, weak) id<SDCycleScrollViewDelegate> delegate;
 
 /** block方式监听点击 */
-@property (nonatomic, copy) void (^clickItemOperationBlock)(NSInteger currentIndex);
+@property (nullable, nonatomic, copy) void (^clickItemOperationBlock)(NSInteger currentIndex);
 
 /** block方式监听滚动 */
-@property (nonatomic, copy) void (^itemDidScrollOperationBlock)(NSInteger currentIndex);
+@property (nullable, nonatomic, copy) void (^itemDidScrollOperationBlock)(NSInteger currentIndex);
 
 /** 可以调用此方法手动控制滚动到哪一个index */
 - (void)makeScrollViewScrollToIndex:(NSInteger)index;
 
 /** 解决viewWillAppear时出现时轮播图卡在一半的问题，在控制器viewWillAppear时调用此方法 */
-- (void)adjustWhenControllerViewWillAppera;
+- (void)adjustWhenControllerViewWillAppear;
 
 //////////////////////  自定义样式API  //////////////////////
 
@@ -143,7 +146,7 @@ typedef enum {
 @property (nonatomic, assign) UIViewContentMode bannerImageViewContentMode;
 
 /** 占位图，用于网络未加载到图片时 */
-@property (nonatomic, strong) UIImage *placeholderImage;
+@property (nullable, nonatomic, strong) UIImage *placeholderImage;
 
 /** 是否显示分页控件 */
 @property (nonatomic, assign) BOOL showPageControl;
@@ -170,25 +173,25 @@ typedef enum {
 @property (nonatomic, assign) CGSize pageControlDotSize;
 
 /** 当前分页控件小圆标颜色 */
-@property (nonatomic, strong) UIColor *currentPageDotColor;
+@property (nullable, nonatomic, strong) UIColor *currentPageDotColor;
 
 /** 其他分页控件小圆标颜色 */
-@property (nonatomic, strong) UIColor *pageDotColor;
+@property (nullable, nonatomic, strong) UIColor *pageDotColor;
 
 /** 当前分页控件小圆标图片 */
-@property (nonatomic, strong) UIImage *currentPageDotImage;
+@property (nullable, nonatomic, strong) UIImage *currentPageDotImage;
 
 /** 其他分页控件小圆标图片 */
-@property (nonatomic, strong) UIImage *pageDotImage;
+@property (nullable, nonatomic, strong) UIImage *pageDotImage;
 
 /** 轮播文字label字体颜色 */
-@property (nonatomic, strong) UIColor *titleLabelTextColor;
+@property (nullable, nonatomic, strong) UIColor *titleLabelTextColor;
 
 /** 轮播文字label字体大小 */
-@property (nonatomic, strong) UIFont  *titleLabelTextFont;
+@property (nullable, nonatomic, strong) UIFont  *titleLabelTextFont;
 
 /** 轮播文字label背景颜色 */
-@property (nonatomic, strong) UIColor *titleLabelBackgroundColor;
+@property (nullable, nonatomic, strong) UIColor *titleLabelBackgroundColor;
 
 /** 轮播文字label高度 */
 @property (nonatomic, assign) CGFloat titleLabelHeight;
@@ -199,13 +202,6 @@ typedef enum {
 /** 滚动手势禁用（文字轮播较实用） */
 - (void)disableScrollGesture;
 
-
-//////////////////////  清除缓存API  //////////////////////
-
-/** 清除图片缓存（此次升级后统一使用SDWebImage管理图片加载和缓存）  */
-+ (void)clearImagesCache;
-
-/** 清除图片缓存（兼容旧版本方法） */
-- (void)clearCache;
-
 @end
+
+NS_ASSUME_NONNULL_END

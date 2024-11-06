@@ -1,6 +1,13 @@
-platform :ios, '8.0'
-target 'SDCycleScrollView'
+# Uncomment the next line to define a global platform for your project
+platform :ios, '11.0'
 
-#use_frameworks!
+inhibit_all_warnings!
 
-pod 'SDWebImage', '>= 5.0.0'
+target 'SDCycleScrollView' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  # use_frameworks!
+
+  # Pods for SDCycleScrollView
+   pod 'SDWebImage'
+
+end

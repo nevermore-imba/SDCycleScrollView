@@ -32,14 +32,16 @@
 
 #import <UIKit/UIKit.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface SDCollectionViewCell : UICollectionViewCell
 
-@property (weak, nonatomic) UIImageView *imageView;
-@property (copy, nonatomic) NSString *title;
+@property (nonatomic, strong) UIImageView *imageView;
+@property (nullable, copy, nonatomic) NSString *title;
 
-@property (nonatomic, strong) UIColor *titleLabelTextColor;
-@property (nonatomic, strong) UIFont *titleLabelTextFont;
-@property (nonatomic, strong) UIColor *titleLabelBackgroundColor;
+@property (nullable, nonatomic, strong) UIColor *titleLabelTextColor;
+@property (nullable, nonatomic, strong) UIFont *titleLabelTextFont;
+@property (nullable, nonatomic, strong) UIColor *titleLabelBackgroundColor;
 @property (nonatomic, assign) CGFloat titleLabelHeight;
 @property (nonatomic, assign) NSTextAlignment titleLabelTextAlignment;
 
@@ -49,3 +51,5 @@
 @property (nonatomic, assign) BOOL onlyDisplayText;
 
 @end
+
+NS_ASSUME_NONNULL_END
