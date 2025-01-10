@@ -32,6 +32,7 @@
 #import "SDCycleScrollView.h"
 #import "CustomCollectionViewCell.h"
 #import "UIImageView+WebCache.h"
+#import "CustomNibCollectionViewCell.h"
 
 @interface ViewController () <SDCycleScrollViewDelegate>
 
@@ -225,6 +226,17 @@
         return nil;
     }
     return [CustomCollectionViewCell class];
+}
+
+- (id)customCollectionViewCellSourceForCycleScrollView:(SDCycleScrollView *)view forIndex:(NSInteger)index {
+    if (view != _customCellScrollViewDemo) {
+        return nil;
+    }
+    if (index % 2 == 0) {
+        return [CustomCollectionViewCell class];
+    } else {
+        return [UINib nibWithNibName:NSStringFromClass(CustomNibCollectionViewCell.class) bundle:nil];
+    }
 }
 
 - (void)setupCustomCell:(UICollectionViewCell *)cell forIndex:(NSInteger)index cycleScrollView:(SDCycleScrollView *)view

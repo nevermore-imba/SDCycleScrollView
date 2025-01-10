@@ -77,6 +77,9 @@ NS_ASSUME_NONNULL_BEGIN
 /** 如果你需要自定义cell样式，请在实现此代理方法返回你的自定义cell的Nib。 */
 - (UINib *)customCollectionViewCellNibForCycleScrollView:(SDCycleScrollView *)view;
 
+/** 如果你需要自定义cell样式，请在实现此代理方法返回你的自定义cell的class/nib。 */
+- (id)customCollectionViewCellSourceForCycleScrollView:(SDCycleScrollView *)view forIndex:(NSInteger)index;
+
 /** 如果你自定义了cell样式，请在实现此代理方法为你的cell填充数据以及其它一系列设置 */
 - (void)cycleScrollView:(SDCycleScrollView *)cycleScrollView willDisplayCell:(__kindof UICollectionViewCell *)cell forIndex:(NSInteger)index;
 

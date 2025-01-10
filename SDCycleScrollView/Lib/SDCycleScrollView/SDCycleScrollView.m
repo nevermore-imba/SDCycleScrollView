@@ -32,10 +32,32 @@
 #import "SDCycleScrollView.h"
 #import "SDCollectionViewCell.h"
 #import "TAPageControl.h"
+#import <objc/runtime.h>
 
 #define kCycleScrollViewInitialPageControlDotSize CGSizeMake(10, 10)
 
 static NSString * const kCellReuseIdentifier = @"SDCycleScrollViewCellReuseIdentifier";
+
+@interface SDReuseCellInfo : NSObject
+@property (nonatomic, assign) BOOL isNib;
+@property (nonatomic, readonly) Class cellClass;
+@property (nonatomic, copy, readonly) NSString *reuseIdentifier;
+- (instancetype)initWithCellClass:(Class)cellClass cellNib:(nullable UINib *)nib reuseIdentifier:(NSString *)reuseIdentifier NS_DESIGNATED_INITIALIZER;
+- (instancetype)init NS_UNAVAILABLE;
++ (instancetype)new NS_UNAVAILABLE;
+@end
+
+@implementation SDReuseCellInfo
+- (instancetype)initWithCellClass:(Class)cellClass cellNib:(nullable UINib *)nib reuseIdentifier:(NSString *)reuseIdentifier {
+    self = [super init];
+    if (self) {
+        _isNib = (nib != nil && [nib isMemberOfClass:UINib.class]);
+        _cellClass = cellClass;
+        _reuseIdentifier = reuseIdentifier;
+    }
+    return self;
+}
+@end
 
 @interface SDCycleScrollView () <UICollectionViewDataSource, UICollectionViewDelegate>
 @property (nonatomic, weak) UICollectionView *mainView; // 显示图片的collectionView
@@ -45,9 +67,17 @@ static NSString * const kCellReuseIdentifier = @"SDCycleScrollViewCellReuseIdent
 @property (nonatomic, assign) NSInteger totalItemsCount;
 @property (nonatomic, weak) UIControl *pageControl;
 @property (nonatomic, strong) UIImageView *backgroundImageView; // 当imageURLs为空时的背景图
+@property (null_resettable, nonatomic, strong) NSMutableArray<SDReuseCellInfo *> *reuseCellInfos;
 @end
 
 @implementation SDCycleScrollView
+
+- (NSMutableArray<SDReuseCellInfo *> *)reuseCellInfos {
+    if (!_reuseCellInfos) {
+        _reuseCellInfos = @[].mutableCopy;
+    }
+    return _reuseCellInfos;
+}
 
 - (instancetype)initWithFrame:(CGRect)frame
 {
@@ -471,6 +501,27 @@ static NSString * const kCellReuseIdentifier = @"SDCycleScrollViewCellReuseIdent
     return (NSInteger)index % self.imagePathsGroup.count;
 }
 
+- (NSString *)cellReuseIdentifierForClass:(Class)cellClass nib:(nullable UINib *)cellNib isNib:(BOOL)isNib {
+    __block NSString *reuseIdentifier = nil;
+    [self.reuseCellInfos enumerateObjectsUsingBlock:^(SDReuseCellInfo *info, NSUInteger idx, BOOL * _Nonnull stop) {
+        if (info.isNib == isNib && info.cellClass != nil && info.cellClass == cellClass && info.reuseIdentifier != nil) {
+            reuseIdentifier = info.reuseIdentifier;
+            *stop = YES;
+        }
+    }];
+    if (!reuseIdentifier) {
+        reuseIdentifier = [NSString stringWithFormat:@"SD_%@_%@ReuseIdentifier", NSStringFromClass(cellClass), isNib ? @"nibCell" : @"cell"];
+        if (isNib) {
+            [self.mainView registerNib:cellNib forCellWithReuseIdentifier:reuseIdentifier];
+        } else {
+            [self.mainView registerClass:cellClass forCellWithReuseIdentifier:reuseIdentifier];
+        }
+        SDReuseCellInfo *cellInfo = [[SDReuseCellInfo alloc] initWithCellClass:cellClass cellNib:cellNib reuseIdentifier:reuseIdentifier];
+        [self.reuseCellInfos addObject:cellInfo];
+    }
+    return reuseIdentifier;
+}
+
 #pragma mark - life circles
 
 - (void)layoutSubviews
@@ -564,8 +615,31 @@ static NSString * const kCellReuseIdentifier = @"SDCycleScrollViewCellReuseIdent
     return _totalItemsCount;
 }
 
-- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
-{
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+
+    NSInteger itemIndex = [self pageControlIndexWithCurrentCellIndex:indexPath.item];
+
+    if (self.delegate != nil) {
+        if ([self.delegate respondsToSelector:@selector(customCollectionViewCellSourceForCycleScrollView:forIndex:)]) {
+            id object = [self.delegate customCollectionViewCellSourceForCycleScrollView:self forIndex:itemIndex];
+            if ([object isKindOfClass:UINib.class]) {
+                UINib *customCellNib = (UINib *)object;
+                NSArray *nibInObjects = [customCellNib instantiateWithOwner:nil options:nil];
+                id firstNibInObject = nibInObjects.firstObject;
+                if (firstNibInObject != nil && [firstNibInObject isKindOfClass:UICollectionViewCell.class]) {
+                    NSString *cellReuseIdentifier = [self cellReuseIdentifierForClass:[firstNibInObject class] nib:customCellNib isNib:YES];
+                    return [collectionView dequeueReusableCellWithReuseIdentifier:cellReuseIdentifier forIndexPath:indexPath];
+                }
+            } else if (class_isMetaClass(object_getClass(object))) {
+                Class customCellClass = (Class)object;
+                if ([customCellClass.new isKindOfClass:UICollectionViewCell.class]) {
+                    NSString *cellReuseIdentifier = [self cellReuseIdentifierForClass:customCellClass nib:nil isNib:NO];
+                    return [collectionView dequeueReusableCellWithReuseIdentifier:cellReuseIdentifier forIndexPath:indexPath];
+                }
+            }
+        }
+    }
+
     return [collectionView dequeueReusableCellWithReuseIdentifier:kCellReuseIdentifier forIndexPath:indexPath];
 }
 
