@@ -529,10 +529,16 @@ static NSString * const kCellReuseIdentifier = @"SDCycleScrollViewCellReuseIdent
     self.delegate = self.delegate;
     
     [super layoutSubviews];
-    
+
+    CGFloat width = self.frame.size.width;
+    CGFloat height = self.frame.size.height;
+
+    if (width <= 0 || height <= 0) return;
+
     _flowLayout.itemSize = self.frame.size;
     
     _mainView.frame = self.bounds;
+    
     if (_mainView.contentOffset.x == 0 &&  _totalItemsCount) {
         int targetIndex = 0;
         if (self.infiniteLoop) {

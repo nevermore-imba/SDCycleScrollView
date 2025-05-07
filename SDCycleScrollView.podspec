@@ -1,8 +1,8 @@
 Pod::Spec.new do |s|
 
 s.name         = "SDCycleScrollView"
-s.version      = "1.8.3"
-s.summary      = "简单易用的图片无限轮播器. 1.8.3 版本更新内容：修复iOS14上系统自带pagecontrol显示不出来bug"
+s.version      = "1.8.4"
+s.summary      = "简单易用的图片无限轮播器."
 
 s.homepage     = "https://github.com/gsdios/SDCycleScrollView"
 
